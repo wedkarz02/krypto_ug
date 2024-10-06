@@ -1,5 +1,8 @@
+use std::error::Error;
+
 use clap::Parser;
 
+mod affine;
 mod caesar;
 mod cli;
 
@@ -44,8 +47,36 @@ fn parse_config(args: cli::Args) -> Config {
     Config { cipher, mode }
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let args = cli::Args::parse();
     let config = parse_config(args);
     println!("{:#?}", config);
+
+    let plaintext = "Lorem ipsum, kys!";
+    let ciphertext = "Lapcq wfueq, gyu!";
+    let key = 1;
+    let a = 5;
+    let b = 8;
+
+    match (config.cipher, config.mode) {
+        (Cipher::Caesar, Mode::Encrypt) => {
+            let ciphertext = caesar::encrypt(plaintext, key)?;
+            println!("ciphertext: {}", ciphertext);
+        }
+        (Cipher::Caesar, Mode::Decrypt) => {
+            let plaintext = caesar::decrypt(ciphertext, key)?;
+            println!("plaintext: {}", plaintext);
+        }
+        (Cipher::Affine, Mode::Encrypt) => {
+            let ciphertext = affine::encrypt(plaintext, a, b)?;
+            println!("ciphertext: {}", ciphertext);
+        }
+        (Cipher::Affine, Mode::Decrypt) => {
+            let plaintext = affine::decrypt(ciphertext, a, b)?;
+            println!("plaintext: {}", plaintext);
+        }
+        _ => {}
+    }
+
+    Ok(())
 }

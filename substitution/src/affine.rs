@@ -3,7 +3,7 @@
 use std::error::Error;
 
 /// https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm#Computing_multiplicative_inverses_in_modular_structures
-fn inverse(a: i32, n: i32) -> Option<i32> {
+pub fn inverse(a: i32, n: i32) -> Option<i32> {
     let (mut t, mut new_t) = (0, 1);
     let (mut r, mut new_r) = (n, a);
 

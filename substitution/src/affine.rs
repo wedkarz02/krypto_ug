@@ -1,4 +1,4 @@
-#![allow(unused)]
+// 2024 Paweł Rybak
 
 use std::error::Error;
 

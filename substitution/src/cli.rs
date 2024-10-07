@@ -1,3 +1,5 @@
+// 2024 Paweł Rybak
+
 use clap::{ArgGroup, Parser};
 
 #[derive(Debug, Parser)]

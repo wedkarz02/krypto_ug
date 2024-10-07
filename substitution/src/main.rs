@@ -1,4 +1,11 @@
-use std::error::Error;
+// 2024 Paweł Rybak
+
+use std::{
+    error::Error,
+    fs::{read_to_string, File},
+    io::Write,
+    process,
+};
 
 use clap::Parser;
 
@@ -47,35 +54,114 @@ fn parse_config(args: cli::Args) -> Config {
     Config { cipher, mode }
 }
 
+fn key_tuple() -> Result<(i32, i32), Box<dyn Error>> {
+    let keys = match read_to_string("key.txt") {
+        Ok(msg) => msg,
+        Err(_) => {
+            eprintln!("Error: 'key.txt' file not found.");
+            process::exit(0);
+        }
+    };
+    let mut keys = keys.split_ascii_whitespace();
+    let a = keys.next();
+    let b = keys.next();
+    let (a, b) = match (a, b) {
+        (Some(aa), Some(bb)) => match (aa.parse(), bb.parse()) {
+            (Ok(aaa), Ok(bbb)) => (aaa, bbb),
+            _ => {
+                eprintln!("Error: Invalid key.");
+                process::exit(0);
+            }
+        },
+        _ => {
+            eprintln!("Error: Invalid key.");
+            process::exit(0);
+        }
+    };
+    Ok((a, b))
+}
+
+fn run_caesar_encrypt() -> Result<(), Box<dyn Error>> {
+    let (key, _) = key_tuple()?;
+    let plaintext = match read_to_string("plain.txt") {
+        Ok(msg) => msg,
+        Err(_) => {
+            eprintln!("Error: 'plain.txt' file not found.");
+            process::exit(0);
+        }
+    };
+    let ciphertext = caesar::encrypt(&plaintext, key)?;
+    let mut crypto_file = File::create("crypto.txt")?;
+    crypto_file.write_all(ciphertext.as_bytes())?;
+    Ok(())
+}
+
+fn run_caesar_decrypt() -> Result<(), Box<dyn Error>> {
+    let (key, _) = key_tuple()?;
+    let ciphertext = match read_to_string("crypto.txt") {
+        Ok(msg) => msg,
+        Err(_) => {
+            eprintln!("Error: 'crypto.txt' file not found.");
+            process::exit(0);
+        }
+    };
+    let plaintext = caesar::decrypt(&ciphertext, key)?;
+    let mut decrypt_file = File::create("decrypt.txt")?;
+    decrypt_file.write_all(plaintext.as_bytes())?;
+    Ok(())
+}
+
+fn run_affine_encrypt() -> Result<(), Box<dyn Error>> {
+    let (a, b) = key_tuple()?;
+    let plaintext = match read_to_string("plain.txt") {
+        Ok(msg) => msg,
+        Err(_) => {
+            eprintln!("Error: 'plain.txt' file not found.");
+            process::exit(0);
+        }
+    };
+    let ciphertext = affine::encrypt(&plaintext, a, b)?;
+    let mut crypto_file = File::create("crypto.txt")?;
+    crypto_file.write_all(ciphertext.as_bytes())?;
+    Ok(())
+}
+
+fn run_affine_decrypt() -> Result<(), Box<dyn Error>> {
+    let (a, b) = key_tuple()?;
+    let ciphertext = match read_to_string("crypto.txt") {
+        Ok(msg) => msg,
+        Err(_) => {
+            eprintln!("Error: 'crypto.txt' file not found.");
+            process::exit(0);
+        }
+    };
+    let plaintext = affine::decrypt(&ciphertext, a, b)?;
+    let mut decrypt_file = File::create("decrypt.txt")?;
+    decrypt_file.write_all(plaintext.as_bytes())?;
+    Ok(())
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let args = cli::Args::parse();
     let config = parse_config(args);
-    println!("{:#?}", config);
-
-    let plaintext = "Lorem ipsum, kys!";
-    let ciphertext = "Lapcq wfueq, gyu!";
-    let key = 1;
-    let a = 5;
-    let b = 8;
 
     match (config.cipher, config.mode) {
         (Cipher::Caesar, Mode::Encrypt) => {
-            let ciphertext = caesar::encrypt(plaintext, key)?;
-            println!("ciphertext: {}", ciphertext);
+            run_caesar_encrypt()?;
         }
         (Cipher::Caesar, Mode::Decrypt) => {
-            let plaintext = caesar::decrypt(ciphertext, key)?;
-            println!("plaintext: {}", plaintext);
+            run_caesar_decrypt()?;
         }
+        (Cipher::Caesar, Mode::Plaintext) => {}
+        (Cipher::Caesar, Mode::Ciphertext) => {}
         (Cipher::Affine, Mode::Encrypt) => {
-            let ciphertext = affine::encrypt(plaintext, a, b)?;
-            println!("ciphertext: {}", ciphertext);
+            run_affine_encrypt()?;
         }
         (Cipher::Affine, Mode::Decrypt) => {
-            let plaintext = affine::decrypt(ciphertext, a, b)?;
-            println!("plaintext: {}", plaintext);
+            run_affine_decrypt()?;
         }
-        _ => {}
+        (Cipher::Affine, Mode::Plaintext) => {}
+        (Cipher::Affine, Mode::Ciphertext) => {}
     }
 
     Ok(())

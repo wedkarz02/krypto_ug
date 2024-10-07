@@ -1,8 +1,10 @@
+// 2024 Paweł Rybak
+
 use std::error::Error;
 
 pub fn encrypt(plaintext: &str, key: i32) -> Result<String, Box<dyn Error>> {
     if !(1..=25).contains(&key) {
-        return Err("Invalid key (0 <= key <= 25)".into());
+        return Err("Invalid key (0 < key < 26)".into());
     }
 
     let ciphertext: String = plaintext

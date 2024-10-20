@@ -1,4 +1,5 @@
 // 2024 Paweł Rybak
+#![allow(unused)]
 
 use std::{
     error::Error,
@@ -22,15 +23,14 @@ enum Mode {
 #[derive(Debug)]
 struct Config(Mode);
 
-fn prepare_text() -> Result<(), Box<dyn Error>> {
+fn prepare_text(chunk_size: usize) -> Result<(), Box<dyn Error>> {
     let text = fs::read_to_string("orig.txt")
         .map_err(|_| "Error: File 'orig.txt' not found.")?
         .replace("\n", " ");
     let text = text_cleanup(text);
-    let max_len = 64;
     let mut ctr = 0;
 
-    for _ in text.as_bytes().chunks(max_len) {
+    for _ in text.as_bytes().chunks(chunk_size) {
         ctr += 1;
     }
 
@@ -39,9 +39,9 @@ fn prepare_text() -> Result<(), Box<dyn Error>> {
     }
 
     let mut plain_file = File::create("plain.txt")?;
-    for chunk in text.as_bytes().chunks(max_len) {
+    for chunk in text.as_bytes().chunks(chunk_size) {
         let line = String::from_utf8_lossy(chunk);
-        writeln!(plain_file, "{:width$}", line, width = max_len)?;
+        writeln!(plain_file, "{:width$}", line, width = chunk_size)?;
     }
 
     Ok(())
@@ -73,7 +73,7 @@ where
 
     for chunk in text.as_bytes().chunks(chunk_size) {
         let line = String::from_utf8_lossy(chunk).to_string();
-        if line.len() != 64 {
+        if line.len() != chunk_size {
             continue;
         }
         chunks.push(line);
@@ -120,11 +120,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         Mode::Cryptanalysis
     };
 
+    let key = fs::read_to_string("key.txt")
+        .map_err(|_| "Error: File 'key.txt' not found.")?
+        .trim()
+        .to_string();
+
+    let chunk_size = key.len();
     let config = Config(mode);
 
     match config.0 {
         Mode::Prepare => {
-            if let Err(e) = prepare_text() {
+            if let Err(e) = prepare_text(chunk_size) {
                 println!("{}", e);
             }
         }

@@ -140,9 +140,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
         Mode::Cryptanalysis => {
-            // if let Err(e) = cryptanalysis() {
-            //     println!("{}", e);
-            // }
+            println!("implementation in python lol")
         }
     }
 

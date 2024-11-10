@@ -2,6 +2,8 @@
 
 import sys
 
+MESSAGE_LENGTH_BITS = 24
+
 
 def html_cleanup(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
@@ -20,7 +22,11 @@ def hex_to_bin(hex_string):
 def read_message(file_path):
     with open(file_path, 'r') as file:
         hex_data = file.read().strip()
-    return hex_to_bin(hex_data)
+    bits = hex_to_bin(hex_data)
+    if len(bits) != MESSAGE_LENGTH_BITS:
+        raise ValueError(
+            f"Message must be exactly {MESSAGE_LENGTH_BITS} bits long")
+    return bits
 
 
 def hide_message_in_spaces(lines, bits):
@@ -34,7 +40,7 @@ def hide_message_in_spaces(lines, bits):
 
 def extract_message_from_spaces(lines):
     bits = ["1" if line.endswith(" ") else "0" for line in lines]
-    return ''.join(bits)
+    return ''.join(bits)[:MESSAGE_LENGTH_BITS]
 
 
 def hide_message_in_double_spaces(content, bits):
@@ -73,7 +79,7 @@ def extract_message_from_double_spaces(content):
         else:
             i += 1
 
-    return ''.join(bits)
+    return ''.join(bits)[:MESSAGE_LENGTH_BITS]
 
 
 def hide_message_in_typo_attributes(content, bits):
@@ -131,7 +137,7 @@ def extract_message_from_typo_attributes(content):
         else:
             i += 1
 
-    return ''.join(bits)
+    return ''.join(bits)[:MESSAGE_LENGTH_BITS]
 
 
 def hide_message_in_font_tags(content, bits):
@@ -175,7 +181,7 @@ def extract_message_from_font_tags(content):
         else:
             i += 1
 
-    return ''.join(bits)
+    return ''.join(bits)[:MESSAGE_LENGTH_BITS]
 
 
 def stegano(mode, algorithm):
